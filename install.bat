@@ -36,9 +36,12 @@ if %ERRORLEVEL% neq 0 (
         pause
         exit /b 1
     )
-    :: Refresh PATH
-    set "PATH=%PROGRAMFILES%\nodejs;%APPDATA%\npm;%PATH%"
+    :: Refresh PATH so npm is available in this session
+    for /f "tokens=2*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v Path 2^>nul') do set "SYS_PATH=%%B"
+    for /f "tokens=2*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul') do set "USR_PATH=%%B"
+    set "PATH=!SYS_PATH!;!USR_PATH!;%APPDATA%\npm"
     echo    [OK] Node.js installed.
+    echo    NOTE: If npm is not found below, close and re-run this script.
 ) else (
     echo    [OK] Node.js found.
 )
@@ -78,8 +81,15 @@ echo.
 :: -----------------------------------------------
 echo  [3/7] Pulling Ollama model (llama3.2)...
 ollama pull llama3.2
-echo    [OK] Model ready.
+if %ERRORLEVEL% neq 0 (
+    echo    WARNING: Failed to pull model. You can pull it manually later with: ollama pull llama3.2
+) else (
+    echo    [OK] Model ready.
+)
 echo.
+
+:: Set script directory once, outside any code block
+set "SCRIPT_DIR=%~dp0"
 
 :: -----------------------------------------------
 :: 4. Create config directory
@@ -92,9 +102,7 @@ if not exist "%OC_DIR%" mkdir "%OC_DIR%"
 if exist "%OC_DIR%\openclaw.json" (
     echo    Config already exists, skipping.
 ) else (
-    :: Determine the script's directory to find the template
-    set "SCRIPT_DIR=%~dp0"
-    powershell -ExecutionPolicy Bypass -File "%SCRIPT_DIR%create-config.ps1"
+    powershell -ExecutionPolicy Bypass -File "!SCRIPT_DIR!create-config.ps1"
     echo    [OK] Config template created.
     echo    Edit %OC_DIR%\openclaw.json to add your API keys.
 )
@@ -104,7 +112,6 @@ echo.
 :: 5. Generate icon
 :: -----------------------------------------------
 echo  [5/7] Generating app icon...
-set "SCRIPT_DIR=%~dp0"
 set "APP_DIR=%USERPROFILE%\Desktop\OpenClaw"
 if not exist "%APP_DIR%" mkdir "%APP_DIR%"
 powershell -ExecutionPolicy Bypass -File "%SCRIPT_DIR%create-icon.ps1" -OutputPath "%APP_DIR%\openclaw.ico"

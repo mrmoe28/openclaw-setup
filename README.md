@@ -52,9 +52,11 @@ Edit `%USERPROFILE%\.openclaw\openclaw.json` and replace the placeholder values:
 
 Double-click the **OpenClaw** shortcut on your desktop. It will:
 
-1. Start Ollama (if not already running)
-2. Start a Cloudflare tunnel and **automatically update your config** with the new URL
-3. Start the OpenClaw gateway with voice webhook
+1. Clean stale session locks
+2. Start Ollama (if not already running)
+3. Start a Cloudflare tunnel and **automatically update your config** with the new URL
+4. Start the OpenClaw gateway with voice webhook
+5. Wait for the gateway to come online, then **open the dashboard in your browser** with the auth token pre-filled
 
 Three color-coded terminal windows will open so you can monitor each service.
 
